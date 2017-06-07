@@ -1,0 +1,41 @@
+\begin{thebibliography}{1}
+\def\selectlanguageifdefined#1{
+\expandafter\ifx\csname date#1\endcsname\relax
+\else\selectlanguage{#1}\fi}
+\providecommand*{\href}[2]{{\small #2}}
+\providecommand*{\url}[1]{{\small #1}}
+\providecommand*{\BibUrl}[1]{\url{#1}}
+\providecommand{\BibAnnote}[1]{}
+\providecommand*{\BibEmph}[1]{#1}
+\ProvideTextCommandDefault{\cyrdash}{\hbox to.8em{--\hss--}}
+\providecommand*{\BibDash}{\ifdim\lastskip>0pt\unskip\nobreak\hskip.2em\fi
+\cyrdash\hskip.2em\ignorespaces}
+
+\bibitem{russian}
+\selectlanguageifdefined{russian}
+\BibEmph{Пупкин~Василий, Пупкина~Василиса,
+  Пупкинский~В.П.} Русская статья~//
+  \BibEmph{Научно-технические ведомости НИИ
+  ЧАВО}. \BibDash
+\newblock 2000. \BibDash
+\newblock {№}~16. \BibDash
+\newblock {С.}~32--64.
+
+\bibitem{ANTLR}
+\selectlanguageifdefined{russian}
+ANTLR{ [Электронный ресурс]}, Веб-сайт проекта
+  ANTLR. \BibDash
+\newblock URL: \BibUrl{http://www.antlr.org/} ({дата обращения}:
+  18.06.2015).
+
+\bibitem{java-book}
+\selectlanguageifdefined{russian}
+\BibEmph{Нимейер~П., Леук~Д.} Программирование
+  на Java. \BibDash
+\newblock Эксмо, 2014. \BibDash
+\newblock
+  ISBN:~\href{http://isbndb.com/search-all.html?kw=9785457661004}{9785457661004}.
+  \BibDash
+\newblock URL: \BibUrl{https://books.google.ru/books?id=zVpUBQAAQBAJ}.
+
+\end{thebibliography}

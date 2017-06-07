@@ -1,0 +1,308 @@
+\chapter{Разработка системы}
+
+Прежде чем приступить к описанию процесса разработки, вернемся к рассмотрению выбранных технологий для реализации системы и обозначим решаемые с их помощью задачи.
+
+В качестве архитектуры взамодействия клиента и сервера выбран паттерн REST. Он позволяет использовать стандартные HTTP-методы для вызова методов API. Сервер разрабатывался на языке Python с помощью веб-фреймворка Django. Выбор обусловлен высоким уровнем модульности, благодаря чему возможно функциональное разделение сервера и, как следствие, независимая техническая поддержка частей, а также большой выбор билиотек, решающих рутинные задачи.
+
+Клиентская часть, помимо HTML и CSS, содержит код JavaScript, необходимый для обеспечения интерактивности взаимодействия клиента с приложением. Здесь применен подход рендеринга со стороны клиента, что уменьшает нагрузку на веб-сервер. С помощью библиотоеки React были построены основные элементы управления, Redux позволил реализовать паттерн «однонаправленный поток данных», что позволяет структурировать данные и обеспечить их актуальность для предоставления представлениям. Графическое построение конечных автоматов реализовано с использованием бибилиотеки D3, ориентированной на визуализацию данных через SVG.
+
+\section{Сервер}
+
+Сервер состоит из двух Django-приложений: 
+
+\begin{itemize}
+	\item \textit{model\_checker} -- приложение, реализующее выдачу статических файлов;
+	\item \textit{api} - приложение, реализующее обработку запросов к API, включая запуск процесса NuSMV и выдачу результата выполнения.
+\end{itemize}
+
+Также в разработке использовались сторонние приложения: rest\_framework, предоставляющий инструменты создания Web API в соответствии с принципами REST, и webpack\_loader, необходимый для загрузки JavaScript bundle файлов. Фрагмент конфигурационного файла приведен в листинге \ref{lst:config}.
+
+\begin{lstlisting}[language=Python, 
+				   label=lst:config, 
+				   caption={Фрагмент конфигурационного файла Django.}]
+INSTALLED_APPS = [
+	'django.contrib.auth',
+	'django.contrib.contenttypes',
+	'django.contrib.staticfiles',
+	'webpack_loader',
+	'model_checker',
+	'api',
+	'rest_framework',
+]
+\end{lstlisting}
+
+\subsection{Приложение \textit{api}}
+
+Данное приложение, помимо генерируемых Django модулей, содержит две директории, необходимые для реализации обработки запросов к методам API:
+
+\begin{itemize}
+	\item \textit{~/bin/} -- содержит исполняемый файл модел-чекера NuSMV;
+	\item \textit{~/sandbox/} -- содержит сгенерированные файлы исходного кода описания верифицируемой модели.
+\end{itemize}
+
+Обработка запроса происходит в модуле views.py. Данную рекомендацию дают разработчики библиотеки Django REST Framework. В данном модуле реализовано 5 функций:
+
+\begin{itemize}
+	\item \textit{run\_simulation(request, flags)} -- запускает процесс NuSMV в интерактивном режиме и, в зависимости от флагов, передает в стандартный поток ввода процесса необходимые команды. По завершении возвращает информацию, предоставленную стандартным потоком вывода. Параметр \textit{request} представляет собой строку, содержащую переданный клиентом в теле запроса исходный код модели на языке SMV. Параметр \textit{flags} представляет собой флаги, испольщуемые при запуске NuSMV.
+	\item \textit{run\_verification(request)} -- запускает процесс NuSMV в обычном режиме, т.е. в режиме верификации модели. По завершении возвращает информацию, предоставленную стандартным потоком вывода. Параметр \textit{request} представляет собой строку, содержащую переданный клиентом в теле запроса исходный код модели на языке SMV. 
+	\item \textit{create\_file(source\_code)} -- функция, создающая файл исходного кода SMV для последующей передачи процессу NuSMV. Параметр \textit{source\_code} -- строка, содержащая описание модели. Для генерации названия файла используется шаблон вида \textit{"smv<hash>.smv"}, где \textit{<hash>} -- хэш-сумма параметра \textit{source\_code}, вычисленная по алгоритму SHA-256. Возвращает путь к файлу в виде строки.
+	\item \textit{create\_command(filename, flags)} -- возвращает массив строк, которые впоследствии будут переданы процессу NuSMV через именованный канал.
+	\item \textit{run\_in\_command\_line(commands, nusmv\_commands)} -- функция, создающая новый процесс, в котором происходит запуск NuSMV. Параметр \textit{commands} является массивом строк, полученным с помощью функции \textit{create\_command(filename, flags)}. Параметр \textit{nusmv\_commands} -- массив комманд интерактивного режима NuSMV.
+\end{itemize}
+
+К функциям \textit{run\_simulation} и \textit{run\_verification} подключены декораторы \textit{@api\_view} с параметром \textit{'POST'}. Данный декоратор является частью библиотеки Django REST Framework и необходим при вызове обработчиков запросов. Для разделения методов симуляции и верификации модели используется механизм роутинга, который предполагает использование разных URL для вызываемых методов. Привязка обработчиков к URL происходит в модуле urls.py, фрагмент коротого приведен в листинге \ref{lst:url_assign}.
+
+\begin{lstlisting}[language=Python, 
+			   	   label=lst:url_assign, 
+				   caption={Фрагмент файла urls.py.}]
+urlpatterns = [
+	url(r'^simulate/$', run_simulation, name='run_simulation'),
+	url(r'^verify/$', run_verification, name='run_verification')
+]
+\end{lstlisting}
+
+Как упоминалось выше, создание процесса NuSMV и взаимодействие с ним происходит в методе \textit{run\_in\_command\_line}. В нем используется класс \textit{Popen} пакета \textit{subprocess}. Данный класс предоставляет возможность создания процесса и привязки к его стандартным потокам ввода/вывода именнованного канала, благодаря которому мы получаем информацию о выполнении NuSMV в процессе сервера.
+
+\subsection{Приложение \textit{model\_checking}}
+
+Данное приложение отвечает за выдачу статических файлов клиенту. В корневой директории приложения, помимо сгенерированных фреймфрком, содержатся две папки:
+
+\begin{itemize}
+	\item \textit{~/static/}, содержащая статические файлы JavaScript и CSS, которые будут рассмотрены подробнее в разделе \ref{sec:client};
+	\item \textit{~/templates/}, содержащая файлы шаблонов.
+\end{itemize} 
+
+Фреймворк Django дополняет синтаксис HTML, что позволяет строить шаблоны страниц, в которых загрузка динамичсеких данных происходит с помощью специального синатксиса -- DTL (Django Template Language). Разрабатываемое приложение содержит всего одну страницу, шаблон которой приведен в листинге \ref{lst:template}. Особо выделим строки, содержащие синтаксис DTL, и опишем выполняемые ими функции:
+
+\begin{itemize}
+	\item [(1)]: Инициализация приложения, необходимого для загрузки JavaScript файла, сгенерированного системой сборки Webpack (подробнее в разделе \ref{sec:client}).
+	\item [(2)]: Инициализация интсрументов загрузки статических файлов.
+	\item [(9)]: Загрузка статического файла CSS.
+	\item [(22)]: Загрузка статичсекого файла JavaScript.
+\end{itemize}
+
+\begin{lstlisting}[language=HTML, 
+				   label=lst:template, 
+				   caption={Файл main.html -- шаблон страницы.}]
+{% load render_bundle from webpack_loader %}
+{% load staticfiles %}
+
+<!DOCTYPE html>
+
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<link rel="stylesheet" href="{% static 'css/websmv.css' %}">
+		<title> WebSMV </title>
+	</head>
+	<body>
+		<section>
+		<div class="app-container">
+			<div id="dropdown-container"></div>
+			<div id="state-editor-container"></div>
+			<div id="workspace-container"></div>
+			<div id="run-config-container"></div>
+			<div id="source-code-editor-container"></div>
+			<div id="results-container"></div>
+		</div>
+		{% render_bundle 'main' %}
+		</section>
+	</body>
+</html>
+\end{lstlisting}
+
+\section{Клиент}\label{sec:client}
+
+Разработчики React придерживаются разделения компонентов на два типа:
+
+\begin{itemize}
+	\item \textit{\textbf{«глупые»} компоненты} -- сущности, занимающиеся исключительно рендером элементов HTML и вызывающие обработку событий с помощью механизма обратных вызовов.
+	\item \textit{\textbf{«умные»} компоненты} -- инкапсулируют в себе «глупые» компоненты и передают им ссылки на функции и данные.
+\end{itemize}
+
+Здесь и далее примем \textit{«умные»} \textit{компоненты} как \textit{контейнеры}, а \textit{«глупые»} как \textit{компоненты}.
+
+\subsection{Компоненты}
+
+\textbf{StateEditor} -- реализует работу с множеством состояний конечного автомата. Активируется при выборе конкретного состояния. Состоит из поля ввода названия переменной, раскрывающегося списка типов переменных и кнопки добавления.Стоит отметить, что состав компонента StateEditor изменяется при изменении типа переменной. Так, для переменной типа массив компонент отображает также диапазон используемых индексов и раскрывающийся список возможных типов элементов массива, а для типа перечисление отображается поле ввода нового элемента перечисления, кнопка его добавления и список возможных значений, поддерживающий возможность удаления.
+
+рис.
+
+\textbf{StateItems} -- реализует отображение и редактирование списка атомарных высказываний, соответствующих выбранному состоянию. Состоит из списка атомарных высказываний, каждый элемент которой имеет текстовое поле, отображающее название переменной и ее тип, раскрывающийся список возможных значений переменной и кнопку удаления переменной из множества состояний. Для переменной типа массив компонент отображает множество выпадающих списков, содержащих допустимые для элементов массива значения.
+
+рис.
+
+\textbf{TransitionView} -- отображает отношение перехода, т.е. имена измененных после перехода переменных и их новые значения. Состоит из списка текстовых полей.
+
+рис.
+
+\textbf{SimFlagsBox} -- реализует возможность настройки флагов, используемых при симуляции.
+
+рис.
+
+\textbf{CtlBox/LtlBox} -- компоненты, реализующие создание и отображение спецификаций. В зависимости от выбранного типа темпоральной логики изменяются доступные кнопки.
+
+рис.
+
+\subsection{Контейнеры}
+
+В каждом из контейнеров реализовано две функции Redux: 
+
+\begin{itemize}
+	\item \textit{mapStateToProps} -- устанавливает соответствие между объектами-свойствами контейнера и объектами хранилища;
+	\item \textit{mapDispatchToProps} -- устанавливает соответствие между объектами-функциями контейнера и функциями содателями действий.
+\end{itemize}
+
+Таким образом происходит присоединение представления к схеме однонаправленного потока данных. Рассмотрим подробнее разработанные контейнеры.
+
+\textbf{StateEditorContainer} -- контейнер, инкапсулирующий компоненты отображения и редактирования состояний и переходов. При выборе состояния отображает \textit{StateEditor} и \textit{StateItem}, при выборе перехода отображает \textit{EdgeView}. Использует слудующие редьюсеры:
+
+\begin{itemize}
+	\item WorkspaceReducer,
+	\item StateItemReducer,
+	\item StateEditorReducer.
+\end{itemize}
+
+\textbf{WorkspaceContainer} -- контейнер, инкапсулирующий в себе главный SVG элемент блока построения конечных автоматов. Содержит объект D3Graph (подробнее в разделе \ref{sec:d3}). Работает с WorkSpaceReducer.
+
+\textbf{TlContainer} -- контейнер, отображающий CtlBoc или LtlBox в зависимости от полученного свойства.
+
+\textbf{RunConfigContainer} -- контейнер, содержащий в себе кнопки переключения режима (симуляция/верификация). В режиме верификации отображает кнопки переключения типа темпоральной логики и \textit{TlContainer}.
+
+\textbf{SourceCodeContainer} -- текстовое поле, отображающее сгенерированный исходный код на языке SMV.
+
+\textbf{ExecutionResultContainer} -- текстовое поле, содержащее вывод программы NuSMV, полученный из тела ответа сервера.
+
+\subsection{Модель редьюсеров}
+
+В приложении используется 8 редьюсеров.
+
+\textbf{StateEditorReducer} --
+
+\begin{lstlisting}[language=Java,
+				   caption={Инициализация состояния StateEditorReducer.}]
+const initialState = {
+	states:[]
+};
+\end{lstlisting}
+
+
+\textbf{StateItemReducer} --
+
+\begin{lstlisting}[language=Java,
+const initialState = {
+	stateItem:{
+		stateName: '',
+		type: 'bool',
+		value: '',
+		range: [],
+		arrayType: ''
+	}
+};
+\end{lstlisting}
+
+
+\textbf{WorkspaceReducer} --
+
+\begin{lstlisting}[language=Java,
+caption={Инициализация состояния WorkspaceReducer.}]
+const initialState = {
+	graph: {
+		vertices:[],
+		edges: [],
+		numberOfEdges: 0,
+		initVertex: {},
+		selected: ''},
+	enums: [],
+	vertexGenerator: 0,
+	edgeGenerator: 0,
+	sourceCode: '',
+};
+\end{lstlisting}
+
+
+\textbf{TlReducer} --
+
+\begin{lstlisting}[language=Java,
+caption={Инициализация состояния TlReducer.}]
+const initialState = {
+	tlType:'ctl'
+};
+\end{lstlisting}
+
+
+\textbf{TlBoxReducer} --
+
+\begin{lstlisting}[language=Java,
+caption={Инициализация состояния TlBoxReducer.}]
+const initialState = {
+	formula: ' '
+};
+\end{lstlisting}
+
+
+\textbf{TransitionEditorReducer} --
+
+\begin{lstlisting}[language=Java,
+caption={Инициализация состояния TransitionEditorReducer.}]
+const initialState = {
+	transition:{
+		name: '',
+		value: ''
+	}
+};
+\end{lstlisting}
+
+
+\textbf{RunConfigReducer} --
+
+\begin{lstlisting}[language=Java,
+caption={Инициализация состояния RunConfigReducer.}]
+const initialState = {
+	runMode: 'sim',
+	simFlags: {},
+	ctlFormulas: [],
+	ltlFormulas: [],
+	result: ''
+};
+\end{lstlisting}
+
+
+\textbf{SourceCodeEditorReducer} --
+
+\begin{lstlisting}[language=Java,
+caption={Инициализация состояния SourceCodeEditorReducer.}]
+const initialState = {
+	sourceCode: ''
+};
+\end{lstlisting}
+
+
+\subsection{Создатели дейтсвий}
+
+
+
+\subsection{Поле построения конечных автоматов}
+
+
+
+\subsection{Взаимодействие React-Redux и D3}
+
+
+
+\subsection{Система сборки Webpack}
+
+
+
+\subsection{Стили эелементов}
+
+
+
+
+
+
+
+
+
+
+
