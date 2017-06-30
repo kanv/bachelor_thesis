@@ -2,9 +2,486 @@
 \chapter{ЛИСТИНГИ}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\lstinputlisting[
-label={listings:javaparser},
-caption={Код на Java},
-style=java,
-]
-{src/changeLine.java}
+\begin{lstlisting}[language=Java, 
+label=lst:url_assign, 
+caption={Обработка запроса на верификацию.}]
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+import platform
+import os
+import hashlib
+from subprocess import Popen, PIPE, STDOUT
+
+
+SUBPROCESS_TIMEOUT = 10
+SANDBOX_RELATIVE_PATH = '.\\api\\sandbox\\'
+PATH = os.getcwd()
+MODE_VERIFICATION = 'verification'
+MODE_SIMULATION = 'simulation'
+NUSMV_EXE = '.\\api\\bin\\nusmv.exe'
+
+
+@api_view(['POST'])
+def run_verification(request):
+if platform.system() == 'Windows':
+filename = create_file(request.body.decode('utf-8'))
+commands = create_command(filename, flags)
+output = run_in_command_line(commands, None)
+return Response(output)
+
+
+def create_file(source_code):
+path = PATH + SANDBOX_RELATIVE_PATH
+hashcode = str(hashlib.sha256().hexdigest())
+filename = 'smv' + hashcode + '.smv'
+with open(path + filename, 'wt', encoding='utf-8') as f:
+f.write(source_code)
+return SANDBOX_RELATIVE_PATH + filename
+
+
+def create_command(filename, flags):
+commands = []
+commands.append(NUSMV_EXE)
+commands.append(filename)
+for f in flags:
+commands.append(f)
+return commands
+
+
+def run_in_command_line(commands, nusmv_commands):
+p = Popen(commands, stdout=PIPE, stdin=PIPE, stderr=STDOUT)
+stdout = p.communicate()[0].decode()
+if nusmv_commands is not None:
+for c in nusmv_commands:
+stdout += p.communicate(c)[0].decode()
+return stdout
+\end{lstlisting}
+
+\begin{lstlisting}[language=Java, 
+label=lst:url_assign, 
+caption={Пример сгенерированного SMV-кода.}]
+MODULE main
+VAR
+	VDSSD	: boolean;
+	VDSVSD	: boolean;
+SPEC VDSSD
+ASSIGN
+	init(VDSSD) := TRUE;
+	init(VDSVSD) := TRUE;
+	next(VDSSD):=
+		case
+			VDSSD = TRUE & VDSVSD = TRUE  : FALSE;
+			VDSSD = TRUE & VDSVSD = FALSE  : FALSE;
+			TRUE : TRUE;
+		esac;
+	next(VDSVSD):=
+		case
+			VDSSD = TRUE & VDSVSD = TRUE  : FALSE;
+			VDSSD = TRUE & VDSVSD = FALSE  : TRUE;
+			TRUE : TRUE;
+		esac;
+\end{lstlisting}
+
+\begin{lstlisting}[language=Java, 
+label=lst:url_assign, 
+caption={Создатели действий WorkspaceActions.}]
+import {store} from '../app'
+
+export function addVertex(vertex) {
+	vertex.states = store.getState().stateEditorReducer.states.slice();
+	return {
+		type: "ADD_VERTEX",
+		payload: vertex
+	}
+}
+
+export function removeVertex(vertex) {
+	return {
+		type: "REMOVE_VERTEX",
+		payload: vertex
+	}
+}
+
+export function moveVertex(vertex, x, y) {
+	return {
+		type: "MOVE_VERTEX",
+		payload: {vertex: vertex, x: x, y: y}
+	}
+}
+
+export function addEdge(vertex1, vertex2) {
+	return {
+		type: "ADD_EDGE",
+		payload: [vertex1, vertex2]
+	}
+}
+
+export function removeEdge(vertices) {
+	return {
+		type: "REMOVE_EDGE",
+		payload: vertices
+	}
+}
+
+export function changeInitVertex(vertex) {
+	return {
+		type: 'SET_INIT',
+		payload: vertex
+	}
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=Java, 
+label=lst:url_assign, 
+caption={Реализация компонента LtlBox.}]
+import React from 'react'
+
+export class LtlBox extends React.Component {
+
+constructor(props) {
+	super(props);
+	this.selected = '';
+	this.binary = ['and', 'or', 'not', '()', '->', '<->'];
+	this.ctl = ['G','F','X','U'];
+	this.addState = this.addState.bind(this);
+	this.changeFormula = this.changeFormula.bind(this);
+	this.onAppend = this.onAppend.bind(this);
+	this.changeState = this.changeState.bind(this);
+	this.addLtl = this.addLtl.bind(this);
+}
+
+static propTypes = {
+	formula: React.PropTypes.string.isRequired,
+	states: React.PropTypes.array.isRequired,
+	addLtl: React.PropTypes.func.isRequired,
+	changeFormula: React.PropTypes.func.isRequired
+};
+
+render() {
+	let _this = this;
+	if ((_this.props.states.length != 0) && this.selected == ''){
+		this.selected = _this.props.states[0].stateName;
+	}
+	return (
+		<div className="tl-box">
+		<input className="tl-expr"
+			onChange={_this.changeFormula}
+			value={_this.props.formula}
+			placeholder="TL expression"/>
+		<div className="boolean-operators-box">
+		{
+			_this.binary.map((b) => {
+			return (
+				<button className="btn-boolean"
+				key={b}
+				value={b}
+				onClick={_this.onAppend}>
+				{b}
+				</button>
+				)
+			})
+		}
+		</div>
+		<div className="ltl-operators-box">
+		{
+		_this.ctl.map((b) => {
+			return (
+				<button className="btn-ctl"
+					key={b}
+					value={b}
+					onClick={_this.onAppend}>
+				{b}
+				</button>
+				)
+		})
+		}
+		</div>
+		<div className="state-insert-box">
+		<select className="state-select" onChange={_this.changeState}>
+		{
+			_this.props.states.map( (st) => {
+				return (
+					<option key={st.stateName} value={st.stateName}>
+					{st.stateName}
+					</option>
+					)
+			})
+		}
+		</select>
+		<button className="btn-add-state-tl"
+			onClick={_this.addState}>
+			Add
+		</button>
+		</div>
+		<button className="btn-add-tl-expr" onClick={this.addLtl}>
+		Add
+		</button>
+		</div>
+	);
+}
+
+addLtl(){
+	this.props.addLtl(this.props.formula);
+	this.props.changeFormula('');
+}
+
+addState() {
+	this.props.changeFormula(this.props.formula.concat(this.selected+' '));
+}
+
+
+changeFormula(event) {
+	this.props.changeFormula(event.target.value);
+}
+
+onAppend(event) {
+	this.props.changeFormula(this.props.formula.concat(event.target.value+' '));
+}
+
+changeState(event) {
+	this.selected = event.target.value;
+}
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=Java, 
+label=lst:url_assign, 
+caption={Реализация контейнера WorkspaceContainer.}]
+import React from 'react'
+import { bindActionCreators } from 'redux'
+import { connect } from 'react-redux'
+import D3graph from '../d3/D3graph'
+import * as wsActions from '../actions/WorkspaceActions'
+
+export class WorkspaceContainer extends React.Component {
+
+constructor(props) {
+	super(props);
+	console.log(props);
+	this.d3graph = new D3graph(props);
+	this.isInit = true;
+}
+
+static propTypes = {
+	graph: React.PropTypes.object.isRequired,
+	addVertex: React.PropTypes.func.isRequired,
+	removeVertex: React.PropTypes.func.isRequired,
+	addEdge: React.PropTypes.func.isRequired,
+	removeEdge: React.PropTypes.func.isRequired,
+	moveVertex: React.PropTypes.func.isRequired,
+	changeInitVertex: React.PropTypes.func.isRequired,
+	changeSelectedVertex: React.PropTypes.func.isRequired
+};
+
+render() {
+	return (
+	<div className="container-svg">
+		<svg className="main-svg" id="main-svg"/>
+	</div>
+	);
+}
+
+componentDidMount() {
+	if (this.isInit){
+		this.d3graph.createMarkup();
+		this.isInit = false;
+	}
+}
+
+componentDidUpdate() {
+	this.d3graph.update(this.props);
+}
+}
+
+function mapStateToProps (state) {
+	return {
+		graph: state.workspaceReducer.graph
+	}
+}
+
+function mapDispatchToProps(dispatch) {
+	return {
+		addVertex: bindActionCreators(wsActions.addVertex, dispatch),
+		removeVertex: bindActionCreators(wsActions.removeVertex, dispatch),
+		addEdge: bindActionCreators(wsActions.addEdge, dispatch),
+		removeEdge: bindActionCreators(wsActions.removeEdge, dispatch),
+		moveVertex: bindActionCreators(wsActions.moveVertex, dispatch),
+		updateD3: bindActionCreators(wsActions.updateD3, dispatch),
+		changeInitVertex: bindActionCreators(wsActions.changeInitVertex, dispatch),
+		changeSelectedVertex: bindActionCreators(wsActions.changeSelectedVertex, dispatch)
+	}
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(WorkspaceContainer);
+\end{lstlisting}
+
+\begin{lstlisting}[language=Java, 
+label=lst:url_assign, 
+caption={Конструктор класса D3graph.}]
+constructor(props){
+	this.isVertexClicked = false;
+	this.isContextActive = false;
+	this.edgeFrom = '';
+	this.action = 'select';
+	
+	this.graph = props.graph;
+	this.activeTool = props.activeTool;
+	this.addVertex = props.addVertex;
+	this.removeVertex = props.removeVertex;
+	this.moveVertex = props.moveVertex;
+	this.addEdge = props.addEdge;
+	this.removeEdge = props.removeEdge;
+	this.changeState = props.changeState;
+	this.updateD3 = props.updateD3;
+	this.changeInitVertex = props.changeInitVertex;
+	this.changeSelectedVertex = props.changeSelectedVertex;
+	
+	this.update = this.update.bind(this);
+	this.createMarkup = this.createMarkup.bind(this);
+	this.onRootClick = this.onRootClick.bind(this);
+	this.onRootContextClick = this.onRootContextClick.bind(this);
+	this.onVertexClick = this.onVertexClick.bind(this);
+	this.onVertexContextClick = this.onVertexContextClick.bind(this);
+	this.onEdgeClick = this.onEdgeClick.bind(this);
+	this.onEdgeContextClick = this.onEdgeContextClick.bind(this);
+	this.onDrag = this.onDrag.bind(this);
+	this.onDrop = this.onDrop.bind(this);
+	this.onInitClick = this.onInitClick.bind(this);
+	this.onConnectClick = this.onConnectClick.bind(this);
+	this.onDeleteClick = this.onDeleteClick.bind(this);
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=Java, 
+label=lst:url_assign, 
+caption={Пример сгенерированного SMV-кода.}]
+const initialState = {
+stateItem:{
+stateName: '',
+type: 'bool',
+value: '',
+range: [],
+arrayType: ''
+}
+};
+
+export default function StateItemReducer(state = initialState, action) {
+switch (action.type) {
+	case 'CHANGE_TYPE':{
+		let s1 = {...state.stateItem, type: action.payload};
+		if(s1.type == 'array'){
+			s1.range = [0,0];
+			s1.arrayType = 'bool';
+			s1.value = [];
+		}
+		else
+			s1.range = [];
+		return {...state, stateItem: s1};
+	}
+	case 'CHANGE_NAME':{
+		let s2 = {...state.stateItem, stateName: action.payload};
+		return {...state, stateItem: s2};
+	}
+	case 'ADD_ENUM':{
+		let range = state.stateItem.range.slice();
+		if(range.includes(action.payload)){
+			return state;
+		}
+		range.push(action.payload);
+		let tmp1 = {...state.stateItem, range: range};
+		return {...state, stateItem: tmp1};
+	}
+	case 'REMOVE_ENUM':{
+		let range = state.stateItem.range.slice();
+		range.splice(action.payload - 1, 1);
+		let tmp2 = {...state.stateItem, range: range};
+		return {...state, stateItem: tmp2};
+	}
+	case 'SET_RANGE': {
+		let tmp3 = {...state.stateItem, range: action.payload};
+		return {...state, stateItem: tmp3};
+	}
+	case 'SET_ARRAY_TYPE': {
+		let tmp4 = {...state.stateItem, arrayType: action.payload};
+		return {...state, stateItem: tmp4};
+	}
+	case 'RESET': {
+		return initialState;
+	}
+		default: return state;
+	}
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=Java, 
+label=lst:url_assign, 
+caption={Точка входа приложения app.js.}]
+import React from 'react'
+import {render} from 'react-dom'
+import configureStore from './store/configureStore'
+import StateEditorContainer from './containers/StateEditorContainer'
+import DropdownContainer from './containers/DropdownContainer'
+import WorkspaceContainer from './containers/WorkspaceContainer'
+import SourceCodeEditorContainer from "./containers/SourceCodeEditorContainer";
+import {Provider} from 'react-redux'
+import RunConfigContainer from "./containers/RunConfigContainer";
+import ResultsContainer from "./containers/ResultsContainer";
+
+export const store = configureStore()
+
+render(
+	<Provider store={store}>
+		<div className="dropdown">
+			<DropdownContainer />
+		</div>
+	</Provider>,
+	document.getElementById('dropdown-container')
+);
+
+render(
+	<Provider store={store}>
+		<div className="state-editor">
+			<StateEditorContainer />
+		</div>
+	</Provider>,
+	document.getElementById('state-editor-container')
+);
+
+render(
+	<Provider store={store}>
+		<div className="workspace">
+			<WorkspaceContainer/>
+		</div>
+	</Provider>,
+	document.getElementById('workspace-container')
+);
+
+render(
+	<Provider store={store}>
+		<div className="source-code">
+			<SourceCodeEditorContainer/>
+		</div>
+	</Provider>,
+	document.getElementById('source-code-editor-container')
+);
+
+render(
+	<Provider store={store}>
+		<div className="run-config">
+			<RunConfigContainer/>
+		</div>
+	</Provider>,
+	document.getElementById('run-config-container')
+);
+
+render(
+	<Provider store={store}>
+		<div className="results">
+			<ResultsContainer/>
+		</div>
+	</Provider>,
+	document.getElementById('results-container')
+);
+
+export default store;
+\end{lstlisting}

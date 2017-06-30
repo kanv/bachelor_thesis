@@ -1,4 +1,4 @@
-\begin{thebibliography}{1}
+\begin{thebibliography}{10}
 \def\selectlanguageifdefined#1{
 \expandafter\ifx\csname date#1\endcsname\relax
 \else\selectlanguage{#1}\fi}
@@ -11,31 +11,132 @@
 \providecommand*{\BibDash}{\ifdim\lastskip>0pt\unskip\nobreak\hskip.2em\fi
 \cyrdash\hskip.2em\ignorespaces}
 
-\bibitem{russian}
+\bibitem{mironov-book}
 \selectlanguageifdefined{russian}
-\BibEmph{Пупкин~Василий, Пупкина~Василиса,
-  Пупкинский~В.П.} Русская статья~//
-  \BibEmph{Научно-технические ведомости НИИ
-  ЧАВО}. \BibDash
-\newblock 2000. \BibDash
-\newblock {№}~16. \BibDash
-\newblock {С.}~32--64.
+\BibEmph{Миронов~А.~М.} Верификация программ
+  методом Model Checking. \BibDash
+\newblock Москва, 2012. \BibDash
+\newblock {С.}~84.
+  \BibAnnote{http://intsys.msu.ru/staff/mironov/modelchk.pdf.}
 
-\bibitem{ANTLR}
+\bibitem{karpov-book}
 \selectlanguageifdefined{russian}
-ANTLR{ [Электронный ресурс]}, Веб-сайт проекта
-  ANTLR. \BibDash
-\newblock URL: \BibUrl{http://www.antlr.org/} ({дата обращения}:
-  18.06.2015).
+\BibEmph{Карпов~Ю.~Г.} Верификация параллельных
+  и распределенных программных систем. \BibDash
+\newblock БХВ-Петербург, 2010. \BibDash
+\newblock {С.}~560.
 
-\bibitem{java-book}
+\bibitem{spin}
 \selectlanguageifdefined{russian}
-\BibEmph{Нимейер~П., Леук~Д.} Программирование
-  на Java. \BibDash
-\newblock Эксмо, 2014. \BibDash
-\newblock
-  ISBN:~\href{http://isbndb.com/search-all.html?kw=9785457661004}{9785457661004}.
+SPIN{ [Электронный ресурс]}, SPIN. \BibDash
+\newblock URL: \BibUrl{http://www.spinroot.com/} ({дата
+  обращения}: 18.06.2017).
+
+\bibitem{nusmv-gui}
+\selectlanguageifdefined{english}
+NUSMV: A New Symbolic Model Verifier~/ Alessandro~Cimatti, Edmund~M.~Clarke,
+  Fausto~Giunchiglia, Marco~Roveri~// Proceedings of the 11th International
+  Conference on Computer Aided Verification. \BibDash
+\newblock CAV '99. \BibDash
+\newblock London, UK, UK~: Springer-Verlag, 1999. \BibDash
+\newblock P.~495--499. \BibDash
+\newblock URL: \BibUrl{http://dl.acm.org/citation.cfm?id=647768.733923}.
+
+\bibitem{nusmv}
+\selectlanguageifdefined{russian}
+SPIN{ [Электронный ресурс]}, NuSMV. \BibDash
+\newblock URL: \BibUrl{http://www.spinroot.com/} ({дата
+  обращения}: 18.06.2017).
+
+\bibitem{nuseen}
+\selectlanguageifdefined{russian}
+NuSeen{ [Электронный ресурс]}, NuSeen. \BibDash
+\newblock URL: \BibUrl{http://nuseen.sourceforge.net/} ({дата
+  обращения}: 18.06.2017).
+
+\bibitem{http}
+\selectlanguageifdefined{russian}
+RFC 2616 HTTP/1.1{ [Электронный ресурс]}, RFC. \BibDash
+\newblock URL: \BibUrl{https://tools.ietf.org/html/rfc2616} ({дата
+  обращения}: 18.06.2017).
+
+\bibitem{https}
+\selectlanguageifdefined{russian}
+RFC 2818 HTTPS{ [Электронный ресурс]}, RFC. \BibDash
+\newblock URL: \BibUrl{https://tools.ietf.org/html/rfc2818} ({дата
+  обращения}: 18.06.2017).
+
+\bibitem{rest}
+\selectlanguageifdefined{english}
+\BibEmph{Wilde~Erik, Pautasso~Cesare}. REST: From Research to Practice.
   \BibDash
-\newblock URL: \BibUrl{https://books.google.ru/books?id=zVpUBQAAQBAJ}.
+\newblock 1st edition. \BibDash
+\newblock Springer Publishing Company, Incorporated, 2011. \BibDash
+\newblock ISBN:~\href{http://isbndb.com/search-all.html?kw=1441983023,
+  9781441983022}{1441983023, 9781441983022}.
+
+\bibitem{soap}
+\selectlanguageifdefined{russian}
+SOAP{ [Электронный ресурс]}, W3. \BibDash
+\newblock URL: \BibUrl{https://www.w3.org/TR/2000/NOTE-SOAP-20000508/}
+  ({дата обращения}: 18.06.2017).
+
+\bibitem{sockets}
+\selectlanguageifdefined{english}
+\BibEmph{Stevens~W.~Richard, Fenner~Bill, Rudoff~Andrew~M.} UNIX Network
+  Programming, Vol. 1. \BibDash
+\newblock 3 edition. \BibDash
+\newblock Pearson Education, 2003. \BibDash
+\newblock
+  ISBN:~\href{http://isbndb.com/search-all.html?kw=0131411551}{0131411551}.
+
+\bibitem{node}
+\selectlanguageifdefined{english}
+\BibEmph{Surhone~Lambert~M., Tennoe~Mariam~T., Henssonow~Susan~F.} Node.Js.
+  \BibDash
+\newblock Mauritius~: Betascript Publishing, 2010. \BibDash
+\newblock ISBN:~\href{http://isbndb.com/search-all.html?kw=6133180196,
+  9786133180192}{6133180196, 9786133180192}.
+
+\bibitem{django}
+\selectlanguageifdefined{russian}
+Django{ [Электронный ресурс]}, Django. \BibDash
+\newblock URL: \BibUrl{https://www.djangoproject.com/} ({дата
+  обращения}: 18.06.2017).
+
+\bibitem{reactjs}
+\selectlanguageifdefined{english}
+\BibEmph{Abel~Todd}. ReactJS: Become a Professional in Web App Development.
+  \BibDash
+\newblock USA~: CreateSpace Independent Publishing Platform, 2016. \BibDash
+\newblock ISBN:~\href{http://isbndb.com/search-all.html?kw=1533118825,
+  9781533118820}{1533118825, 9781533118820}.
+
+\bibitem{angular}
+\selectlanguageifdefined{english}
+\BibEmph{Green~Brad, Seshadri~Shyam}. AngularJS. \BibDash
+\newblock 1st edition. \BibDash
+\newblock O'Reilly Media, Inc., 2013. \BibDash
+\newblock ISBN:~\href{http://isbndb.com/search-all.html?kw=1449344852,
+  9781449344856}{1449344852, 9781449344856}.
+
+\bibitem{vuejs}
+\selectlanguageifdefined{russian}
+VueJS{ [Электронный ресурс]}, VueJS. \BibDash
+\newblock URL: \BibUrl{https://vuejs.org/} ({дата обращения}:
+  18.06.2017).
+
+\bibitem{pixijs}
+\selectlanguageifdefined{russian}
+PixiJS{ [Электронный ресурс]}, PixiJS. \BibDash
+\newblock URL: \BibUrl{http://www.pixijs.com/} ({дата обращения}:
+  18.06.2017).
+
+\bibitem{d3js}
+\selectlanguageifdefined{english}
+\BibEmph{Zhu~Nick~Qi}. Data Visualization with D3.Js Cookbook. \BibDash
+\newblock Packt Publishing, 2013. \BibDash
+\newblock ISBN:~\href{http://isbndb.com/search-all.html?kw=178216216X,
+  9781782162162}{178216216X, 9781782162162}.
 
 \end{thebibliography}
